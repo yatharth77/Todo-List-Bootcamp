@@ -6,9 +6,11 @@ document.addEventListener('DOMContentLoaded', getTodos);
 todoButton.addEventListener('click', addTodo);
 todoList.addEventListener('click', deleteCheck);
 
-function createListELement(todoValue){
+//generates HTML for todo list
+function createListELement(todoValue, index, status){
     const todoDiv = document.createElement("div");
     todoDiv.classList.add("todo");
+    todoDiv.classList.add("index-"+index);
 
     const newTodo = document.createElement("li");
     newTodo.innerText = todoValue;
@@ -31,26 +33,39 @@ function createListELement(todoValue){
     todoDiv.appendChild(completedButton);
     todoDiv.appendChild(deleteButton);
 
+    if(status === "completed"){
+        todoDiv.classList.toggle("completed")
+    }
     todoList.appendChild(todoDiv);
 }
 
+//adds new todo to list
 function addTodo(event){
     event.preventDefault();
-    createListELement(todoInput.value);
-    saveLocalTodos(todoInput.value);
+    const todoIndex = saveLocalTodos(todoInput.value);
+    createListELement(todoInput.value, todoIndex, "uncomplete");
     todoInput.value = "";
 }
 
+//delete, edit and toggle complete
 function deleteCheck(e){
     const item = e.target;
     if(item.classList[0] === "delete-btn"){
         const todo = item.parentElement;
-        removeLocalTodos(todo);
+        todoIndex = parseInt(todo.classList[1].replace('index-',''));
+        removeLocalTodos(todoIndex);
         todo.remove();
     }
     else if(item.classList[0] === "complete-btn"){
         const todo = item.parentElement;
         todo.classList.toggle("completed");
+        todoIndex = parseInt(todo.classList[1].replace('index-',''));
+        if(todo.classList.contains("completed")){
+            updateStatusInStorage(todoIndex, "completed");
+        }   
+        else{
+            updateStatusInStorage(todoIndex, "uncomplete");
+        }   
     }
     else if(item.classList[0] === "edit-btn"){
         const todo = item.parentElement;
@@ -75,42 +90,69 @@ function deleteCheck(e){
 
         todoEdit.classList.add("edit-btn");
         todoEdit.classList.remove("save-btn");
+
+        todoIndex = parseInt(todo.classList[1].replace('index-',''));
+        newTodoText = todoText.innerText;
+        updateTodoInStorage(todoIndex, newTodoText);
     }
 }
 
+//fetch todos from storage
+function fetchLocalStorage(){
+    let todos;
+    if(localStorage.getItem("todos") === null) {
+        todos = [];
+    } else {
+        todos = JSON.parse(localStorage.getItem("todos"));
+    }
+    return todos;
+}
+
+//creates new todo in storage
 function saveLocalTodos(todo){
-    let todos;
-    if(localStorage.getItem("todos") === null) {
-        todos = [];
-    } else {
-        todos = JSON.parse(localStorage.getItem("todos"));
-    }
-
-    todos.push(todo);
+    let todos = fetchLocalStorage();
+    todos.push({todo: todo, index: todos.length + 1, status: "uncomplete"});
     localStorage.setItem("todos", JSON.stringify(todos));
+    return todos.length;
 }
 
+//render all todos from storage on page load
 function getTodos(){
-    let todos;
-    if(localStorage.getItem("todos") === null) {
-        todos = [];
-    } else {
-        todos = JSON.parse(localStorage.getItem("todos"));
-    }
-
+    let todos = fetchLocalStorage();
     todos.forEach(function(todo){
-        createListELement(todo);
+        createListELement(todo["todo"], todo["index"], todo["status"]);
     })
 }
 
-function removeLocalTodos(todo){
-    let todos;
-    if(localStorage.getItem("todos") === null) {
-        todos = [];
-    } else {
-        todos = JSON.parse(localStorage.getItem("todos"));
-    }
-    const todoText = todo.childNodes[0].innerText;
-    todos.splice(todos.indexOf(todoText), 1);
+//deletes a todo from storage
+function removeLocalTodos(todoIndex){
+    let todos = fetchLocalStorage();
+    todos.forEach(function(todo, index){
+        if(todo["index"] == todoIndex){
+            todos.splice(index, 1);
+        }
+    })
+    localStorage.setItem('todos', JSON.stringify(todos));
+}
+
+//update status of todo in storage
+function updateStatusInStorage(todoIndex, status){
+    let todos = fetchLocalStorage();
+    todos.forEach(function(todo){
+        if(todo["index"] == todoIndex){
+            todo["status"] = status;
+        }
+    })
+    localStorage.setItem('todos', JSON.stringify(todos));
+}
+
+//update todo text in storage
+function updateTodoInStorage(todoIndex, newTodoText){
+    let todos = fetchLocalStorage();
+    todos.forEach(function(todo){
+        if(todo["index"] == todoIndex){
+            todo["todo"] = newTodoText;
+        }
+    })
     localStorage.setItem('todos', JSON.stringify(todos));
 }
