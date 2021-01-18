@@ -62,7 +62,7 @@ form button:hover {
     flex: 1;
 }
 
-.complete-btn, .delete-btn {
+.complete-btn, .delete-btn, .edit-btn, .save-btn{
     background: #314755;
     color: white;
     border: none;
@@ -75,7 +75,7 @@ form button:hover {
     padding: 0rem 0.5rem;
 }
 
-.fa-trash, .fa-check {
+.fa-trash, .fa-check, .fa-floppy-o, .fa-pencil {
     pointer-events: none;
 }
 
