@@ -2,16 +2,16 @@ const todoInput = document.querySelector(".todo-input");
 const todoButton = document.querySelector(".todo-button");
 const todoList = document.querySelector(".todo-list");
 
+document.addEventListener('DOMContentLoaded', getTodos);
 todoButton.addEventListener('click', addTodo);
 todoList.addEventListener('click', deleteCheck);
 
-function addTodo(event){
-    event.preventDefault();
+function createListELement(todoValue){
     const todoDiv = document.createElement("div");
     todoDiv.classList.add("todo");
 
     const newTodo = document.createElement("li");
-    newTodo.innerText = todoInput.value;
+    newTodo.innerText = todoValue;
     newTodo.classList.add("todo-item");
 
     const editButton = document.createElement("button");
@@ -32,6 +32,12 @@ function addTodo(event){
     todoDiv.appendChild(deleteButton);
 
     todoList.appendChild(todoDiv);
+}
+
+function addTodo(event){
+    event.preventDefault();
+    createListELement(todoInput.value);
+    saveLocalTodos(todoInput.value);
     todoInput.value = "";
 }
 
@@ -39,6 +45,7 @@ function deleteCheck(e){
     const item = e.target;
     if(item.classList[0] === "delete-btn"){
         const todo = item.parentElement;
+        removeLocalTodos(todo);
         todo.remove();
     }
     else if(item.classList[0] === "complete-btn"){
@@ -69,4 +76,41 @@ function deleteCheck(e){
         todoEdit.classList.add("edit-btn");
         todoEdit.classList.remove("save-btn");
     }
+}
+
+function saveLocalTodos(todo){
+    let todos;
+    if(localStorage.getItem("todos") === null) {
+        todos = [];
+    } else {
+        todos = JSON.parse(localStorage.getItem("todos"));
+    }
+
+    todos.push(todo);
+    localStorage.setItem("todos", JSON.stringify(todos));
+}
+
+function getTodos(){
+    let todos;
+    if(localStorage.getItem("todos") === null) {
+        todos = [];
+    } else {
+        todos = JSON.parse(localStorage.getItem("todos"));
+    }
+
+    todos.forEach(function(todo){
+        createListELement(todo);
+    })
+}
+
+function removeLocalTodos(todo){
+    let todos;
+    if(localStorage.getItem("todos") === null) {
+        todos = [];
+    } else {
+        todos = JSON.parse(localStorage.getItem("todos"));
+    }
+    const todoText = todo.childNodes[0].innerText;
+    todos.splice(todos.indexOf(todoText), 1);
+    localStorage.setItem('todos', JSON.stringify(todos));
 }
